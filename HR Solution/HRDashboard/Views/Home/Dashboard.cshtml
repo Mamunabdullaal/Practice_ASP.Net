@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "HR Dashboard";
+}
+
+<h2>Data from Sheet: @ViewBag.SheetName</h2>
+
+<table border="1">
+    <tr>
+        @foreach (var column in ViewBag.Data.Columns)
+        {
+            <th>@column.ColumnName</th>
+        }
+    </tr>
+
+    @foreach (System.Data.DataRow row in ViewBag.Data.Rows)
+    {
+        <tr>
+            @foreach (var item in row.ItemArray)
+            {
+                <td>@item</td>
+            }
+        </tr>
+    }
+</table>
+
+<a asp-action="Index">Back to Sheet Selection</a>

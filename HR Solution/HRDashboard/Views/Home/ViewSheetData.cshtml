@@ -1,0 +1,141 @@
+﻿@model List<Dictionary<string, object>>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sheet Data - @ViewData["SheetName"]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        th {
+            background-color: #1e1e1e;
+        }
+
+        tr:nth-child(even) {
+            background-color: #222;
+        }
+
+        tr:hover {
+            background-color: #333;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .editable-cell {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>@ViewData["SheetName"] Data</h1>
+
+    <!-- Table for displaying data -->
+    <div class="table-container">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    @if (Model.Count > 0)
+                    {
+                        var firstRow = Model[0];
+                        foreach (var key in firstRow.Keys)
+                        {
+                            <th>@key</th>
+                        }
+                    }
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    <tr id="row_@row.Values.First()">
+                        @foreach (var keyValuePair in row)
+                        {
+                            <td class="editable-cell" contenteditable="true" onblur="saveEdit(this, '@keyValuePair.Key', '@row.Values.First()')">@keyValuePair.Value</td>
+                        }
+                        <td class="actions">
+                            <button onclick="editRow('@row.Values.First()')">Edit</button>
+                            <button onclick="addRowAfter(this)">Add</button>
+                            <form method="post" asp-action="DeleteRow" asp-route-sheetName="@ViewData["SheetName"]" asp-route-rowId="@row.Values.First()">
+                                <button type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Function to save edits made in the cells
+        function saveEdit(cell, column, rowId) {
+            const newValue = cell.innerText;
+
+            fetch('/Home/UpdateRow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sheetName: '@ViewData["SheetName"]',
+                    rowId: rowId,
+                    column: column,
+                    value: newValue
+                })
+            }).then(response => {
+                if (response.ok) {
+                    alert('Row updated');
+                } else {
+                    alert('Error updating row');
+                }
+            });
+        }
+
+        // Function to add a new row after the clicked row
+        function addRowAfter(button) {
+            var row = button.closest('tr');
+            var newRow = row.cloneNode(true);
+            const newRowId = 'row_' + new Date().getTime();
+            newRow.id = newRowId;
+
+            var cells = newRow.getElementsByTagName('td');
+            for (var i = 0; i < cells.length - 1; i++) {
+                cells[i].innerText = '';
+            }
+
+            row.parentNode.insertBefore(newRow, row.nextSibling);
+        }
+
+        function editRow(rowId) {
+            alert('Edit row with ID: ' + rowId);
+        }
+    </script>
+</body>
+</html>
