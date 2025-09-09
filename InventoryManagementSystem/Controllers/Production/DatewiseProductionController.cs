@@ -1,253 +1,222 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using InventoryManagementSystem.Models; // Adjust namespace
+using InventoryManagementSystem.Models;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
-public class DatewiseProductionController : Controller
+namespace InventoryManagementSystem.Controllers
 {
-    private readonly IMSContext _context;
-
-    public DatewiseProductionController(IMSContext context)
+    public class DatewiseProductionController : Controller
     {
-        _context = context;
-    }
+        private readonly IMSContext _context;
 
-    // GET: DatewiseProduction
-    public async Task<IActionResult> Index()
-    {
-        var productions = await _context.DatewiseProductions
-            .OrderByDescending(d => d.Date)
-            .ToListAsync();
-        return View(productions);
-    }
-
-    // GET: DatewiseProduction/Details/5
-    public async Task<IActionResult> Details(int? id)
-    {
-        if (id == null) return NotFound();
-
-        var production = await _context.DatewiseProductions
-            .FirstOrDefaultAsync(m => m.ProdID == id);
-        if (production == null) return NotFound();
-
-        return View(production);
-    }
-
-    // GET: DatewiseProduction/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: DatewiseProduction/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(DatewiseProduction datewiseProduction)
-    {
-        if (ModelState.IsValid)
+        public DatewiseProductionController(IMSContext context)
         {
-            // Calculate Stock & LeftOver
-            var previousLeftOver = _context.DatewiseProductions
-                .Where(d => d.ItemName == datewiseProduction.ItemName && d.Date < datewiseProduction.Date)
-                .OrderByDescending(d => d.Date)
-                .Select(d => d.LeftOver)
-                .FirstOrDefault();
-
-            datewiseProduction.Stock = previousLeftOver + datewiseProduction.Production;
-            datewiseProduction.LeftOver = datewiseProduction.Stock - (datewiseProduction.Sell + datewiseProduction.Waste);
-
-            // Add record
-            _context.Add(datewiseProduction);
-            await _context.SaveChangesAsync();
-
-            // Update MTD and RemainingStock
-            UpdateMTDProduction(datewiseProduction.ItemName);
-            UpdateRemainingStock();
-
-            return RedirectToAction(nameof(Index));
+            _context = context;
         }
-        return View(datewiseProduction);
-    }
 
-    // GET: DatewiseProduction/Edit/5
-    public async Task<IActionResult> Edit(int? id)
-    {
-        if (id == null) return NotFound();
-
-        var production = await _context.DatewiseProductions.FindAsync(id);
-        if (production == null) return NotFound();
-
-        return View(production);
-    }
-
-    // POST: DatewiseProduction/Edit/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, DatewiseProduction datewiseProduction)
-    {
-        if (id != datewiseProduction.ProdID) return NotFound();
-
-        if (ModelState.IsValid)
+        // ------------------ Index ------------------ //
+        public async Task<IActionResult> Index()
         {
-            try
-            {
-                // Recalculate Stock & LeftOver
-                var previousLeftOver = _context.DatewiseProductions
-                    .Where(d => d.ItemName == datewiseProduction.ItemName && d.Date < datewiseProduction.Date && d.ProdID != id)
-                    .OrderByDescending(d => d.Date)
-                    .Select(d => d.LeftOver)
-                    .FirstOrDefault();
+            var productions = await _context.DatewiseProductions
+                                            .OrderByDescending(d => d.Date)
+                                            .ToListAsync();
+            return View(productions);
+        }
 
-                datewiseProduction.Stock = previousLeftOver + datewiseProduction.Production;
-                datewiseProduction.LeftOver = datewiseProduction.Stock - (datewiseProduction.Sell + datewiseProduction.Waste);
+        // ------------------ Details ------------------ //
+        public async Task<IActionResult> Details(int prodID)
+        {
+            var production = await _context.DatewiseProductions
+                                           .FirstOrDefaultAsync(p => p.ProdID == prodID);
+            if (production == null) return NotFound();
+            return View(production);
+        }
+
+        // ------------------ Create (GET) ------------------ //
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // ------------------ Create (POST) ------------------ //
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(DatewiseProduction datewiseProduction)
+        {
+            if (ModelState.IsValid)
+            {
+                CalculateStockAndLeftOver(datewiseProduction);
+
+                _context.DatewiseProductions.Add(datewiseProduction);
+                await _context.SaveChangesAsync();
+
+                UpdateMTDProduction(datewiseProduction.ItemName);
+                UpdateRemainingStock();
+
+                return RedirectToAction(nameof(Index));
+            }
+            return View(datewiseProduction);
+        }
+
+        // ------------------ Edit (GET) ------------------ //
+        public async Task<IActionResult> Edit(int prodID)
+        {
+            var production = await _context.DatewiseProductions.FindAsync(prodID);
+            if (production == null) return NotFound();
+            return View(production);
+        }
+
+        // ------------------ Edit (POST) ------------------ //
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int prodID, DatewiseProduction datewiseProduction)
+        {
+            if (prodID != datewiseProduction.ProdID) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                CalculateStockAndLeftOver(datewiseProduction);
 
                 _context.Update(datewiseProduction);
                 await _context.SaveChangesAsync();
 
-                // Update MTD & RemainingStock
                 UpdateMTDProduction(datewiseProduction.ItemName);
                 UpdateRemainingStock();
+
+                return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateConcurrencyException)
+            return View(datewiseProduction);
+        }
+
+        // ------------------ Delete ------------------ //
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int prodID)
+        {
+            var production = await _context.DatewiseProductions.FindAsync(prodID);
+            if (production != null)
             {
-                if (!DatewiseProductionExists(datewiseProduction.ProdID))
-                    return NotFound();
-                else
-                    throw;
+                string itemName = production.ItemName;
+
+                _context.DatewiseProductions.Remove(production);
+                await _context.SaveChangesAsync();
+
+                UpdateMTDProduction(itemName);
+                UpdateRemainingStock();
             }
             return RedirectToAction(nameof(Index));
         }
-        return View(datewiseProduction);
-    }
 
-    // GET: DatewiseProduction/Delete/5
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null) return NotFound();
-
-        var production = await _context.DatewiseProductions
-            .FirstOrDefaultAsync(m => m.ProdID == id);
-        if (production == null) return NotFound();
-
-        return View(production);
-    }
-
-    // POST: DatewiseProduction/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
-        var production = await _context.DatewiseProductions.FindAsync(id);
-        if (production != null)
+        // ------------------ Calculate Stock and LeftOver ------------------ //
+        private void CalculateStockAndLeftOver(DatewiseProduction datewiseProduction)
         {
-            _context.DatewiseProductions.Remove(production);
-            await _context.SaveChangesAsync();
+            // Get previous date's LeftOver for this item
+            var previous = _context.DatewiseProductions
+                                   .Where(d => d.ItemName == datewiseProduction.ItemName && d.Date < datewiseProduction.Date)
+                                   .OrderByDescending(d => d.Date)
+                                   .FirstOrDefault();
 
-            // Update MTD & RemainingStock
-            UpdateMTDProduction(production.ItemName);
-            UpdateRemainingStock();
+            int previousLeftOver = previous?.LeftOver ?? 0;
+
+            // Stock = Previous LeftOver + Current Production
+            datewiseProduction.Stock = previousLeftOver + datewiseProduction.Production;
+
+            // LeftOver = Stock - (Sell + Waste)
+            datewiseProduction.LeftOver = datewiseProduction.Stock - (datewiseProduction.Sell + datewiseProduction.Waste);
         }
-        return RedirectToAction(nameof(Index));
-    }
 
-    private bool DatewiseProductionExists(int id)
-    {
-        return _context.DatewiseProductions.Any(e => e.ProdID == id);
-    }
-
-    // ---------------- Helper Methods ---------------- //
-
-    private void UpdateMTDProduction(string itemName)
-    {
-        var datewiseRecords = _context.DatewiseProductions
-            .Where(d => d.ItemName == itemName)
-            .ToList();
-
-        if (!datewiseRecords.Any())
+        // ------------------ Update MTDProduction ------------------ //
+        private void UpdateMTDProduction(string itemName)
         {
-            var existingMTD = _context.MTDProductions.FirstOrDefault(m => m.ItemName == itemName);
-            if (existingMTD != null)
+            var allProductions = _context.DatewiseProductions
+                                         .Where(d => d.ItemName == itemName)
+                                         .OrderBy(d => d.Date)
+                                         .ToList();
+
+            int totalProduction = allProductions.Sum(d => d.Production);
+            int totalSell = allProductions.Sum(d => d.Sell);
+            int totalWaste = allProductions.Sum(d => d.Waste);
+            int totalStock = allProductions.Sum(d => d.Stock);
+
+            // TotalLeftOver = latest date's LeftOver
+            int totalLeftOver = allProductions.LastOrDefault()?.LeftOver ?? 0;
+
+            var mtd = _context.MTDProductions.FirstOrDefault(m => m.ItemName == itemName);
+            if (mtd == null)
             {
-                _context.MTDProductions.Remove(existingMTD);
-                _context.SaveChanges();
-            }
-            return;
-        }
-
-        var totalProduction = datewiseRecords.Sum(d => d.Production);
-        var totalStock = datewiseRecords.Sum(d => d.Stock);
-        var totalSell = datewiseRecords.Sum(d => d.Sell);
-        var totalWaste = datewiseRecords.Sum(d => d.Waste);
-        var totalLeftOver = totalStock - (totalSell + totalWaste);
-
-        var mtdRecord = _context.MTDProductions.FirstOrDefault(m => m.ItemName == itemName);
-        if (mtdRecord == null)
-        {
-            mtdRecord = new MTDProduction
-            {
-                ItemName = itemName,
-                TotalProduction = totalProduction,
-                TotalStock = totalStock,
-                TotalSell = totalSell,
-                TotalWaste = totalWaste,
-                TotalLeftOver = totalLeftOver
-            };
-            _context.MTDProductions.Add(mtdRecord);
-        }
-        else
-        {
-            mtdRecord.TotalProduction = totalProduction;
-            mtdRecord.TotalStock = totalStock;
-            mtdRecord.TotalSell = totalSell;
-            mtdRecord.TotalWaste = totalWaste;
-            mtdRecord.TotalLeftOver = totalLeftOver;
-            _context.MTDProductions.Update(mtdRecord);
-        }
-        _context.SaveChanges();
-    }
-
-    private void UpdateRemainingStock()
-    {
-        // Get all ingredients from Stock table
-        var ingredients = _context.Stocks.Select(s => s.IngredientName).Distinct().ToList();
-
-        foreach (var ingredient in ingredients)
-        {
-            // Get stock
-            var stockValue = _context.Stocks
-                .Where(s => s.IngredientName == ingredient)
-                .Sum(s => s.StockUnit);
-
-            // Calculate UsedUnit: sum of (ItemRecipe quantity * MTD Production)
-            var usedUnit = (from recipe in _context.ItemRecipes
-                            join mtd in _context.MTDProductions
-                            on recipe.ItemName equals mtd.ItemName
-                            where recipe.IngredientName == ingredient
-                            select (recipe.QuantityGmPerPc * mtd.TotalProduction)).Sum();
-
-            var ingredientLeftOver = stockValue - usedUnit;
-
-            var remaining = _context.RemainingStocks.FirstOrDefault(r => r.IngredientName == ingredient);
-            if (remaining == null)
-            {
-                remaining = new RemainingStock
+                mtd = new MTDProduction
                 {
-                    IngredientName = ingredient,
-                    Stock = stockValue,
-                    UsedUnit = usedUnit,
-                    IngredientLeftOver = ingredientLeftOver
+                    ItemName = itemName,
+                    TotalProduction = totalProduction,
+                    TotalStock = totalStock,
+                    TotalSell = totalSell,
+                    TotalWaste = totalWaste,
+                    TotalLeftOver = totalLeftOver
                 };
-                _context.RemainingStocks.Add(remaining);
+                _context.MTDProductions.Add(mtd);
             }
             else
             {
-                remaining.Stock = stockValue;
-                remaining.UsedUnit = usedUnit;
-                remaining.IngredientLeftOver = ingredientLeftOver;
-                _context.RemainingStocks.Update(remaining);
+                mtd.TotalProduction = totalProduction;
+                mtd.TotalStock = totalStock;
+                mtd.TotalSell = totalSell;
+                mtd.TotalWaste = totalWaste;
+                mtd.TotalLeftOver = totalLeftOver;
+                _context.MTDProductions.Update(mtd);
             }
+
+            _context.SaveChanges();
         }
-        _context.SaveChanges();
+
+        // ------------------ Update RemainingStock ------------------ //
+        private void UpdateRemainingStock()
+        {
+            var ingredients = _context.Stocks.Select(s => s.IngredientName).Distinct().ToList();
+            var itemRecipes = _context.ItemRecipes.AsEnumerable().ToList();
+            var mtdProductions = _context.MTDProductions.AsEnumerable().ToList();
+
+            foreach (var ingredient in ingredients)
+            {
+                var totalStock = _context.Stocks
+                                         .Where(s => s.IngredientName == ingredient)
+                                         .Sum(s => s.StockUnit);
+
+                var usedUnit = (from recipe in itemRecipes
+                                join mtd in mtdProductions
+                                on recipe.ItemName equals mtd.ItemName into mtdJoin
+                                from mtd in mtdJoin.DefaultIfEmpty()
+                                where recipe.IngredientName == ingredient
+                                select recipe.QuantityGmPerPc * (mtd != null ? mtd.TotalProduction : 0m))
+                               .DefaultIfEmpty(0m)
+                               .Sum();
+
+                var ingredientLeftOver = totalStock - usedUnit;
+
+                var remaining = _context.RemainingStocks.FirstOrDefault(r => r.IngredientName == ingredient);
+                if (remaining == null)
+                {
+                    remaining = new RemainingStock
+                    {
+                        IngredientName = ingredient,
+                        Stock = totalStock,
+                        UsedUnit = usedUnit,
+                        IngredientLeftOver = ingredientLeftOver
+                    };
+                    _context.RemainingStocks.Add(remaining);
+                }
+                else
+                {
+                    remaining.Stock = totalStock;
+                    remaining.UsedUnit = usedUnit;
+                    remaining.IngredientLeftOver = ingredientLeftOver;
+                    _context.RemainingStocks.Update(remaining);
+                }
+            }
+
+            _context.SaveChanges();
+        }
     }
 }

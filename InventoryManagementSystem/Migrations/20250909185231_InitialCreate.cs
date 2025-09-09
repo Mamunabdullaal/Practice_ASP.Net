@@ -85,15 +85,15 @@ namespace InventoryManagementSystem.Migrations
                 name: "Stocks",
                 columns: table => new
                 {
-                    StockID = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IngredientName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StockUnit = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    StockUnit = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Stocks", x => x.StockID);
+                    table.PrimaryKey("PK_Stocks", x => x.Id);
                 });
         }
 

@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Upload Stock";
+}
+
+<h2>Upload Stock Excel</h2>
+
+<div class="alert alert-info">
+    Upload an Excel file (.xlsx) with the following columns in order:
+    <ul>
+        <li><strong>IngredientName</strong></li>
+        <li><strong>StockUnit</strong></li>
+        <li><strong>Date</strong> (yyyy-MM-dd)</li>
+    </ul>
+</div>
+
+<form asp-action="UploadStock" asp-controller="Stock" enctype="multipart/form-data" method="post">
+    <div class="form-group">
+        <label for="file">Select Excel File:</label>
+        <input type="file" name="file" id="file" class="form-control" accept=".xlsx" />
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+
+@if (ViewBag.Message != null)
+{
+        <div class="alert alert-success mt-3">
+        @ViewBag.Message
+        </div>
+}

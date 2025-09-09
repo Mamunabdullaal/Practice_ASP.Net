@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InventoryManagementSystem.Migrations
 {
     [DbContext(typeof(IMSContext))]
-    [Migration("20250909175422_InitialCreate")]
+    [Migration("20250909185231_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -57,6 +57,55 @@ namespace InventoryManagementSystem.Migrations
                     b.HasKey("ProdID");
 
                     b.ToTable("DatewiseProductions");
+                });
+
+            modelBuilder.Entity("InventoryManagementSystem.Models.RemainingStock", b =>
+                {
+                    b.Property<int>("RemainingStockID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RemainingStockID"));
+
+                    b.Property<decimal>("IngredientLeftOver")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("IngredientName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Stock")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UsedUnit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("RemainingStockID");
+
+                    b.ToTable("RemainingStocks");
+                });
+
+            modelBuilder.Entity("InventoryManagementSystem.Models.Stock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IngredientName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StockUnit")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Stocks");
                 });
 
             modelBuilder.Entity("ItemRecipe", b =>
@@ -119,55 +168,6 @@ namespace InventoryManagementSystem.Migrations
                     b.HasKey("MTDProductionID");
 
                     b.ToTable("MTDProductions");
-                });
-
-            modelBuilder.Entity("RemainingStock", b =>
-                {
-                    b.Property<int>("RemainingStockID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RemainingStockID"));
-
-                    b.Property<decimal>("IngredientLeftOver")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("IngredientName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Stock")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UsedUnit")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("RemainingStockID");
-
-                    b.ToTable("RemainingStocks");
-                });
-
-            modelBuilder.Entity("Stock", b =>
-                {
-                    b.Property<int>("StockID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockID"));
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("IngredientName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("StockUnit")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("StockID");
-
-                    b.ToTable("Stocks");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,40 @@
+﻿@using InventoryManagementSystem.Models
+@inject IMSContext _context
+@model IEnumerable<InventoryManagementSystem.Models.Stock>
+
+@{
+    ViewData["Title"] = "Stock List";
+}
+
+<h2>Stock List</h2>
+
+<p>
+    <a class="btn btn-primary" asp-action="UploadStock">Upload Excel Stock</a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Ingredient Name</th>
+            <th>Date</th>
+            <th>Stock Unit</th>
+            <th>Used Unit</th>
+            <th>Ingredient Left Over</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            // Fetch RemainingStock info from DbContext
+            var remaining = _context.RemainingStocks.FirstOrDefault(r => r.IngredientName == item.IngredientName);
+
+            <tr>
+                <td>@item.IngredientName</td>
+                <td>@item.Date.ToString("yyyy-MM-dd")</td>
+                <td>@item.StockUnit</td>
+                <td>@(remaining != null ? remaining.UsedUnit : 0)</td>
+                <td>@(remaining != null ? remaining.IngredientLeftOver : 0)</td>
+            </tr>
+        }
+    </tbody>
+</table>
