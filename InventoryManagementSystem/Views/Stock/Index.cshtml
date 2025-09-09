@@ -1,15 +1,9 @@
-﻿@using InventoryManagementSystem.Models
-@inject IMSContext _context
-@model IEnumerable<InventoryManagementSystem.Models.Stock>
-
-@{
-    ViewData["Title"] = "Stock List";
-}
+﻿@model IEnumerable<InventoryManagementSystem.Models.Stock>
 
 <h2>Stock List</h2>
 
 <p>
-    <a class="btn btn-primary" asp-action="UploadStock">Upload Excel Stock</a>
+    <a asp-action="UploadStock" class="btn btn-primary">Upload Stock from Excel</a>
 </p>
 
 <table class="table table-bordered table-striped">
@@ -18,22 +12,20 @@
             <th>Ingredient Name</th>
             <th>Date</th>
             <th>Stock Unit</th>
-            <th>Used Unit</th>
-            <th>Ingredient Left Over</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
-            // Fetch RemainingStock info from DbContext
-            var remaining = _context.RemainingStocks.FirstOrDefault(r => r.IngredientName == item.IngredientName);
-
             <tr>
                 <td>@item.IngredientName</td>
                 <td>@item.Date.ToString("yyyy-MM-dd")</td>
                 <td>@item.StockUnit</td>
-                <td>@(remaining != null ? remaining.UsedUnit : 0)</td>
-                <td>@(remaining != null ? remaining.IngredientLeftOver : 0)</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
             </tr>
         }
     </tbody>

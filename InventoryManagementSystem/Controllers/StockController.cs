@@ -48,7 +48,6 @@ namespace InventoryManagementSystem.Controllers
             {
                 await file.CopyToAsync(stream);
 
-                // EPPlus 7.7.3 License
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
                 using (var package = new ExcelPackage(stream))
@@ -100,49 +99,112 @@ namespace InventoryManagementSystem.Controllers
                     }
 
                     await _context.SaveChangesAsync();
+                    UpdateRemainingStock(); // recalc remaining stock
 
-                    // Update RemainingStock safely
-                    UpdateRemainingStock();
-
-                    ViewBag.Message = "Stock uploaded successfully and RemainingStock updated!";
+                    ViewBag.Message = "Stock uploaded successfully!";
                     return View();
                 }
             }
         }
 
-        // ------------------ Update RemainingStock ------------------ //
-        private void UpdateRemainingStock()
+        // ------------------ Edit GET ------------------ //
+        public async Task<IActionResult> Edit(int? id)
         {
-            // Get distinct ingredients from Stocks table
+            if (id == null) return NotFound();
+
+            var stock = await _context.Stocks.FindAsync(id);
+            if (stock == null) return NotFound();
+
+            return View(stock);
+        }
+
+        // ------------------ Edit POST ------------------ //
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Stock stock)
+        {
+            if (id != stock.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(stock);
+                    await _context.SaveChangesAsync();
+                    UpdateRemainingStock(); // recalc after edit
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.Stocks.Any(e => e.Id == id)) return NotFound();
+                    else throw;
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(stock);
+        }
+
+        // ------------------ Delete GET ------------------ //
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var stock = await _context.Stocks.FirstOrDefaultAsync(s => s.Id == id);
+            if (stock == null) return NotFound();
+
+            return View(stock);
+        }
+
+        // ------------------ Delete POST ------------------ //
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var stock = await _context.Stocks.FindAsync(id);
+            if (stock != null)
+            {
+                _context.Stocks.Remove(stock);
+                await _context.SaveChangesAsync();
+                UpdateRemainingStock(); // recalc after delete
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ------------------ Update RemainingStock (Cumulative) ------------------ //
+        public void UpdateRemainingStock()
+        {
             var ingredients = _context.Stocks
                                       .Select(s => s.IngredientName)
                                       .Distinct()
                                       .ToList();
 
-            // Load data into memory to avoid LINQ-to-SQL translation issues
             var itemRecipes = _context.ItemRecipes.AsEnumerable().ToList();
             var mtdProductions = _context.MTDProductions.AsEnumerable().ToList();
 
             foreach (var ingredient in ingredients)
             {
-                // Total Stock for this ingredient
                 var totalStock = _context.Stocks
                                          .Where(s => s.IngredientName == ingredient)
                                          .Sum(s => s.StockUnit);
 
-                // UsedUnit calculation in-memory
-                var usedUnit = (from recipe in itemRecipes
-                                join mtd in mtdProductions
-                                on recipe.ItemName equals mtd.ItemName into mtdJoin
-                                from mtd in mtdJoin.DefaultIfEmpty()
-                                where recipe.IngredientName == ingredient
-                                select recipe.QuantityGmPerPc * (mtd != null ? mtd.TotalProduction : 0m))
-                               .DefaultIfEmpty(0m)
-                               .Sum();
+                decimal usedUnit = 0m;
+
+                var recipesForIngredient = itemRecipes
+                                           .Where(r => r.IngredientName == ingredient)
+                                           .ToList();
+
+                foreach (var recipe in recipesForIngredient)
+                {
+                    var mtd = mtdProductions.FirstOrDefault(m => m.ItemName == recipe.ItemName);
+                    decimal totalProduced = mtd != null ? mtd.TotalProduction : 0m;
+
+                    if (recipe.QuantityGmPerPc > 0)
+                        usedUnit += recipe.QuantityGmPerPc * totalProduced;
+                    if (recipe.QuantityPcPerPc > 0)
+                        usedUnit += recipe.QuantityPcPerPc * totalProduced;
+                }
 
                 var ingredientLeftOver = totalStock - usedUnit;
 
-                // Update or insert RemainingStock
                 var remaining = _context.RemainingStocks
                                         .FirstOrDefault(r => r.IngredientName == ingredient);
 
