@@ -1,0 +1,16 @@
+﻿@model InventoryManagementSystem.Models.Stock
+
+<h2>Delete Stock</h2>
+
+<div>
+    <h4>Are you sure you want to delete this stock entry?</h4>
+    <p><strong>Ingredient:</strong> @Model.IngredientName</p>
+    <p><strong>Date:</strong> @Model.Date.ToString("yyyy-MM-dd")</p>
+    <p><strong>Stock Unit:</strong> @Model.StockUnit</p>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

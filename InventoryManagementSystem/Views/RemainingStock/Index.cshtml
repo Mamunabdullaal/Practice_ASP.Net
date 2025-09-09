@@ -1,0 +1,29 @@
+﻿@model IEnumerable<InventoryManagementSystem.Models.RemainingStock>
+
+@{
+    ViewData["Title"] = "Remaining Stock";
+}
+
+<h2>Remaining Stock</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Ingredient Name</th>
+            <th>Stock Unit</th>
+            <th>Used Unit</th>
+            <th>Ingredient Left Over</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IngredientName</td>
+                <td>@item.Stock</td>
+                <td>@item.UsedUnit</td>
+                <td>@item.IngredientLeftOver</td>
+            </tr>
+        }
+    </tbody>
+</table>

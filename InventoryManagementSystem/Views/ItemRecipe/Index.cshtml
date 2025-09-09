@@ -1,0 +1,43 @@
+﻿@model IEnumerable<InventoryManagementSystem.Models.ItemRecipe>
+
+@{
+    ViewData["Title"] = "Item Recipes";
+}
+
+<h2>Item Recipes</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add New Recipe</a>
+</p>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Item Name</th>
+            <th>Ingredient Name</th>
+            <th>Production Quantity</th>
+            <th>Quantity (gm per pc)</th>
+            <th>Quantity (pcs per pc)</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.ItemName</td>
+                <td>@item.IngredientName</td>
+                <td>@item.ProductionQuantity</td>
+                <td>@item.QuantityGmPerPc</td>
+                <td>@item.QuantityPcPerPc</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ItemRecipeID" class="btn btn-sm btn-warning">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.ItemRecipeID" class="btn btn-sm btn-info">Details</a> |
+                    <form asp-action="Delete" asp-route-id="@item.ItemRecipeID" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

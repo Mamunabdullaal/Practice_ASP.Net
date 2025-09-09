@@ -1,0 +1,287 @@
+﻿@{
+    ViewData["Title"] = "Inventory Dashboard";
+    var remainingStocks = ViewBag.RemainingStocks as List<InventoryManagementSystem.Models.RemainingStock> ?? new List<InventoryManagementSystem.Models.RemainingStock>();
+
+    var totalProduction = ViewBag.TotalProduction ?? 0;
+    var totalSell = ViewBag.TotalSell ?? 0;
+    var totalWaste = ViewBag.TotalWaste ?? 0;
+    var totalLeftOver = ViewBag.TotalLeftOver ?? 0;
+    var remainingStockTotal = remainingStocks.Sum(r => r.IngredientLeftOver);
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FF8C00; /* Dark orange */
+            color: black;
+            margin: 0;
+        }
+
+        .dashboard-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            background-color: #fff3e0;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+            .sidebar .nav-button {
+                width: 100%;
+                text-align: left;
+                padding: 0.75rem 1rem;
+                font-weight: bold;
+                font-size: 1rem;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background-color: #ffb74d;
+                color: black;
+                text-decoration: none;
+                border: none;
+                transition: all 0.2s ease;
+            }
+
+                .sidebar .nav-button:hover {
+                    background-color: #ffa726;
+                    transform: translateX(3px);
+                }
+
+        /* Main content */
+        .dashboard-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        /* Dashboard header */
+        .dashboard-header h1 {
+            font-weight: bold;
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .dashboard-header p {
+            font-weight: 600;
+        }
+
+        /* KPI cards */
+        .kpi-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            flex: 1 1 180px;
+            background-color: #fff3e0;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .kpi-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+            }
+
+            .kpi-card h5 {
+                font-weight: bold;
+                margin-bottom: 0.25rem;
+            }
+
+            .kpi-card .value {
+                font-size: 1.5rem;
+                font-weight: bold;
+            }
+
+        .kpi-icon {
+            font-size: 2rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            color: white;
+        }
+
+            .kpi-icon.production {
+                background-color: #3498db;
+            }
+
+            .kpi-icon.sell {
+                background-color: #27ae60;
+            }
+
+            .kpi-icon.waste {
+                background-color: #e74c3c;
+            }
+
+            .kpi-icon.leftover {
+                background-color: #f39c12;
+            }
+
+            .kpi-icon.stock {
+                background-color: #8e44ad;
+            }
+
+        /* Remaining stock table */
+        .table-container {
+            background-color: #fff3e0;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .table thead th {
+            font-weight: bold;
+            color: black;
+        }
+
+        .stock-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 50px;
+            font-weight: bold;
+        }
+
+            .stock-badge.high {
+                background-color: #27ae60;
+                color: white;
+            }
+
+            .stock-badge.medium {
+                background-color: #f39c12;
+                color: white;
+            }
+
+            .stock-badge.low {
+                background-color: #e74c3c;
+                color: white;
+            }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="/Stock" target="_blank" class="nav-button"><i class="bi bi-box-seam"></i> Stock</a>
+            <a href="/DatewiseProduction" target="_blank" class="nav-button"><i class="bi bi-calendar-check"></i> Datewise Production</a>
+            <a href="/ItemRecipe" target="_blank" class="nav-button"><i class="bi bi-card-list"></i> Item Recipes</a>
+        </div>
+
+        <!-- Main content -->
+        <div class="dashboard-content">
+            <!-- Header -->
+            <div class="dashboard-header mb-4">
+                <h1>Inventory Dashboard</h1>
+                <p>Real-time overview of your inventory metrics</p>
+            </div>
+
+            <!-- KPI cards -->
+            <div class="kpi-section">
+                <div class="kpi-card">
+                    <div>
+                        <h5>Total Production</h5>
+                        <div class="value">@totalProduction</div>
+                    </div>
+                    <div class="kpi-icon production"><i class="bi bi-box-seam"></i></div>
+                </div>
+
+                <div class="kpi-card">
+                    <div>
+                        <h5>Total Sell</h5>
+                        <div class="value">@totalSell</div>
+                    </div>
+                    <div class="kpi-icon sell"><i class="bi bi-cart-check"></i></div>
+                </div>
+
+                <div class="kpi-card">
+                    <div>
+                        <h5>Total Waste</h5>
+                        <div class="value">@totalWaste</div>
+                    </div>
+                    <div class="kpi-icon waste"><i class="bi bi-trash"></i></div>
+                </div>
+
+                <div class="kpi-card">
+                    <div>
+                        <h5>Production Left Over</h5>
+                        <div class="value">@totalLeftOver</div>
+                    </div>
+                    <div class="kpi-icon leftover"><i class="bi bi-archive"></i></div>
+                </div>
+
+                <div class="kpi-card">
+                    <div>
+                        <h5>Remaining Stock</h5>
+                        <div class="value">@remainingStockTotal</div>
+                    </div>
+                    <div class="kpi-icon stock"><i class="bi bi-box2-fill"></i></div>
+                </div>
+            </div>
+
+            <!-- Remaining Stock Table -->
+            <div class="table-container mt-4">
+                <h5 class="mb-3">Remaining Stock Details</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ingredient Name</th>
+                                <th>Stock Unit</th>
+                                <th>Used Unit</th>
+                                <th>Ingredient Left Over</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (remainingStocks != null && remainingStocks.Count > 0)
+                            {
+                                foreach (var item in remainingStocks)
+                                {
+                                    var stockLevel = item.IngredientLeftOver > 50 ? "high" : item.IngredientLeftOver > 20 ? "medium" : "low";
+                                    <tr>
+                                        <td>@item.IngredientName</td>
+                                        <td>@item.Stock</td>
+                                        <td>@item.UsedUnit</td>
+                                        <td><span class="stock-badge @stockLevel">@item.IngredientLeftOver</span></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center">No stock data available</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

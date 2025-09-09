@@ -1,0 +1,29 @@
+﻿@model InventoryManagementSystem.Models.ItemRecipe
+
+@{
+    ViewData["Title"] = "Recipe Details";
+}
+
+<h2>Recipe Details</h2>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">Item Name</dt>
+        <dd class="col-sm-10">@Model.ItemName</dd>
+
+        <dt class="col-sm-2">Ingredient Name</dt>
+        <dd class="col-sm-10">@Model.IngredientName</dd>
+
+        <dt class="col-sm-2">Production Quantity</dt>
+        <dd class="col-sm-10">@Model.ProductionQuantity</dd>
+
+        <dt class="col-sm-2">Quantity (gm per pc)</dt>
+        <dd class="col-sm-10">@Model.QuantityGmPerPc</dd>
+
+        <dt class="col-sm-2">Quantity (pcs per pc)</dt>
+        <dd class="col-sm-10">@Model.QuantityPcPerPc</dd>
+    </dl>
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.ItemRecipeID" class="btn btn-warning">Edit</a>
+<a asp-action="Index" class="btn btn-secondary">Back</a>
