@@ -1,0 +1,38 @@
+﻿@model InventoryManagementSystem.Models.DatewiseProduction
+
+@{
+    ViewData["Title"] = "Production Details";
+}
+
+<h1>Production Details</h1>
+
+<div class="form-group">
+    <label>Date:</label>
+    <span>@Model.Date.ToShortDateString()</span>
+</div>
+<div class="form-group">
+    <label>Item Name:</label>
+    <span>@Model.ItemName</span>
+</div>
+<div class="form-group">
+    <label>Production:</label>
+    <span>@Model.Production</span>
+</div>
+<div class="form-group">
+    <label>Stock:</label>
+    <span>@Model.Stock</span>
+</div>
+<div class="form-group">
+    <label>Sell:</label>
+    <span>@Model.Sell</span>
+</div>
+<div class="form-group">
+    <label>Waste:</label>
+    <span>@Model.Waste</span>
+</div>
+<div class="form-group">
+    <label>Left Over:</label>
+    <span>@Model.LeftOver</span>
+</div>
+
+<a asp-action="Index" class="btn btn-secondary">Back</a>

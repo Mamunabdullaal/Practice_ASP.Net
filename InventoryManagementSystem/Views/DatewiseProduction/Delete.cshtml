@@ -1,0 +1,25 @@
+﻿@model InventoryManagementSystem.Models.DatewiseProduction
+
+@{
+    ViewData["Title"] = "Delete Production";
+}
+
+<h1>Delete Production</h1>
+
+<h3>Are you sure you want to delete this record?</h3>
+
+<div>
+    <p><strong>Date:</strong> @Model.Date.ToShortDateString()</p>
+    <p><strong>Item Name:</strong> @Model.ItemName</p>
+    <p><strong>Production:</strong> @Model.Production</p>
+    <p><strong>Stock:</strong> @Model.Stock</p>
+    <p><strong>Sell:</strong> @Model.Sell</p>
+    <p><strong>Waste:</strong> @Model.Waste</p>
+    <p><strong>Left Over:</strong> @Model.LeftOver</p>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="ProdID" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

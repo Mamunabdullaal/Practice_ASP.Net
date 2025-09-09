@@ -1,0 +1,38 @@
+﻿@model InventoryManagementSystem.Models.DatewiseProduction
+
+@{
+    ViewData["Title"] = "Add Datewise Production";
+}
+
+<h1>Add Datewise Production</h1>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="Date"></label>
+        <input asp-for="Date" class="form-control" type="date" />
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="ItemName"></label>
+        <input asp-for="ItemName" class="form-control" />
+        <span asp-validation-for="ItemName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Production"></label>
+        <input asp-for="Production" class="form-control" type="number" />
+        <span asp-validation-for="Production" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Sell"></label>
+        <input asp-for="Sell" class="form-control" type="number" />
+        <span asp-validation-for="Sell" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Waste"></label>
+        <input asp-for="Waste" class="form-control" type="number" />
+        <span asp-validation-for="Waste" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>

@@ -1,0 +1,45 @@
+﻿@model IEnumerable<InventoryManagementSystem.Models.DatewiseProduction>
+
+@{
+    ViewData["Title"] = "Datewise Production";
+}
+
+<h1>Datewise Production</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add New Production</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Item Name</th>
+            <th>Production</th>
+            <th>Stock</th>
+            <th>Sell</th>
+            <th>Waste</th>
+            <th>Left Over</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Date.ToShortDateString()</td>
+                <td>@item.ItemName</td>
+                <td>@item.Production</td>
+                <td>@item.Stock</td>
+                <td>@item.Sell</td>
+                <td>@item.Waste</td>
+                <td>@item.LeftOver</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ProdID" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.ProdID" class="btn btn-sm btn-info">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.ProdID" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
